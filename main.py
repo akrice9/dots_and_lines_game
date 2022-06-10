@@ -81,30 +81,61 @@ def get_logical_position(x, y):
 
 def mark_line(pos, direction):
   global player_turn
-  x1 = 50 * pos[0] + 50
-  y1 = 50 * pos[1] + 50
   if direction == 'row':
-    x1 = x1 - 50
-    x2 = 50 * pos[0] + 100
-    y2 = y1
+    r = int((pos[0] - 1) // 2)
+    c = int(pos[1]//2)
+    start_x = r * 100 + 50
+    end_x = start_x + 100
+    start_y = c * 100 + 50
+    end_y = start_y
   elif direction == 'col':
-    y1 = y1 - 50
-    x2 = x1
-    y2 = 50 * pos[1] + 100
+    c = int((pos[1] - 1) // 2)
+    r = int(pos[0] // 2)
+    start_x = 100 * r + 50
+    end_x = start_x
+    start_y = c * 100 + 50
+    end_y = start_y + 100
   if player_turn == 1:
-    canvas.create_line(x1, y1, x2, y2, width = 5, fill = player1_color)
-    player_turn = 2
-    return player_turn
-  elif player_turn == 2:
-    canvas.create_line(x1, y1, x2, y2, width = 5, fill = player2_color)
-    player_turn = 1
-    return player_turn
+    color = player1_color
+  else:
+    color = player2_color
+  canvas.create_line(start_x, start_y, end_x, end_y, width = edge_width, fill = color)
+
+def shade_box(box):
+  start_x = 50 + (((box[0][0] -1) //2)  * 100) + edge_width/2
+  start_y = 50 + (((box[3][1] -1) //2)  * 100) + edge_width/2
+  end_x = start_x + 100 - edge_width
+  end_y = start_y + 100 - edge_width
+  if player_turn == 1:
+      color = player1_color_light
+  else:
+      color = player2_color_light
+  canvas.create_rectangle(start_x, start_y, end_x, end_y, fill=color, outline='')
+
+def check_completes_box(pos):
+  completing_boxes = 0
+  for box in boxes:
+    if pos in box:
+      line_found_count = 0
+      for line in box:
+        if line in marked_lines:
+          line_found_count += 1
+      if line_found_count == 4:
+        shade_box(box)
+        completing_boxes += 1
+  return completing_boxes
 
 def handle_click(e):
   pos, direction = get_logical_position(e.x, e.y)
   if direction == '':
     return
-  mark_line(pos, direction)
+  if not pos in marked_lines: 
+    mark_line(pos, direction)
+    marked_lines.append(pos)
+  else:
+    return
+  boxes_completed = check_completes_box(pos)
+  print(boxes_completed)
 
 draw_board(canvas)
 window.bind('<Button-1>', handle_click)
