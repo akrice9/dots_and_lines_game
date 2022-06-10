@@ -4,6 +4,8 @@ player_turn = 1;
 player1_points = 0
 player2_points = 0
 marked_lines = []
+write_turn = ''
+write_points = ''
 
     # The following will help track which lines belong to a box and determining if a box has been completed.
 box0 = [[1,0],[2,1],[1,2],[0,1]]
@@ -126,6 +128,7 @@ def check_completes_box(pos):
   return completing_boxes
 
 def handle_click(e):
+  global player1_points, player2_points, player_turn, write_points, write_turn
   pos, direction = get_logical_position(e.x, e.y)
   if direction == '':
     return
@@ -136,6 +139,33 @@ def handle_click(e):
     return
   boxes_completed = check_completes_box(pos)
   print(boxes_completed)
+  if boxes_completed > 0:
+    if player_turn == 1:
+      player1_points += boxes_completed
+    else:
+      player2_points += boxes_completed
+    canvas.delete(write_points)
+    write_points = canvas.create_text(550, 20, text = "P1: " + str(player1_points) + ' | P2: ' + str(player2_points))
+  else:
+    if player_turn == 1:
+      player_turn = 2
+      canvas.delete(write_turn)
+      canvas.create_text(60, 20, text = "player 2's turn!", fill = player2_color)
+    else:
+      player_turn = 1
+      canvas.delete(write_turn)
+      canvas.create_text(60, 20, text = "player 1's turn!", fill = player1_color)
+  #check for end of game
+  if len(marked_lines) == 60:
+    canvas.delete(write_turn)
+    winner = "it's a tie!"
+    if player1_points > player2_points:
+      winner = 'player 1 wins!'
+      color = player1_color
+    elif player2_points > player1_points:
+      winner = 'player 2 wins!'
+      color = player2_color
+    canvas.create_text(250, 20, text = winner, fill = color)
 
 draw_board(canvas)
 window.bind('<Button-1>', handle_click)
